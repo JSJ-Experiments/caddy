@@ -29,3 +29,7 @@ caddy-dist
 # IDE files
 .idea/
 .vscode/
+
+# Local QUIC experiment artifacts
+.quic-src/
+.experiment/

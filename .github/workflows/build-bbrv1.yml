@@ -1,0 +1,26 @@
+name: Experimental Caddy BBRv1 (linux-arm64)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: blacksmith-8vcpu-ubuntu-2404-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version: '1.26.3'
+          cache: true
+      - name: Download and verify pinned dependencies
+        run: go mod download && go mod verify
+      - name: Test Caddy and QUIC congestion control
+        run: scripts/bbrv1/check.sh
+      - name: Build and smoke-test experimental and stock binaries
+        run: scripts/bbrv1/build.sh && scripts/bbrv1/smoke.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: caddy-bbrv1-linux-arm64
+          path: dist/*
+          retention-days: 14

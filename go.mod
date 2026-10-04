@@ -1,5 +1,8 @@
 module github.com/caddyserver/caddy/v2
 
+// Experimental BBRv1 port rebased onto upstream quic-go v0.59.1.
+replace github.com/quic-go/quic-go => github.com/JSJ-Experiments/caddy-quic-go v0.59.2-0.20261004204851-25a38bfc5715
+
 go 1.25.1
 
 require (
