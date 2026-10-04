@@ -7,7 +7,9 @@ if [[ $(go env GOOS) != linux || $(go env GOARCH) != arm64 ]]; then
 fi
 mkdir -p dist
 sha=$(git rev-parse HEAD)
-go build -trimpath -ldflags "-s -w -X github.com/caddyserver/caddy/v2.CustomVersion=v2.11.4-bbrv1-${sha:0:12}" -o dist/caddy-bbrv1 ./cmd/caddy
+suffix=''
+if [[ -n $(git status --porcelain) ]]; then suffix=-dirty; fi
+go build -trimpath -ldflags "-s -w -X github.com/caddyserver/caddy/v2.CustomVersion=v2.11.4-bbrv1-${sha:0:12}$suffix" -o dist/caddy-bbrv1 ./cmd/caddy
 go build -trimpath -ldflags '-s -w' -o dist/quicprobe ./scripts/bbrv1/quicprobe
 
 # Same upstream version, compiler and build flags; do not use an unknown system
@@ -21,9 +23,15 @@ out=$PWD/dist/caddy-stock
 (cd "$stock" && go build -trimpath -ldflags '-s -w -X github.com/caddyserver/caddy/v2.CustomVersion=v2.11.4-stock-experiment' -o "$out" ./cmd/caddy)
 {
   printf 'caddy_fork_commit=%s\n' "$sha"
+  printf 'working_tree_suffix=%s\n' "$suffix"
   printf 'caddy_upstream_commit=e2eee6a7fce366321294c9c2a79f3146891dcbdf\n'
   printf 'quic_fork_commit=25a38bfc5715b8f5fd21be74951176a75d1bf602\n'
   go version
   go version -m dist/caddy-bbrv1
 } > dist/build-info.txt
-(cd dist && sha256sum caddy-bbrv1 caddy-stock quicprobe build-info.txt > SHA256SUMS)
+cp LICENSE dist/LICENSE.caddy.txt
+cp docs/bbrv1-licenses/QUICHE-BSD.txt dist/LICENSE.QUICHE.txt
+cp docs/bbrv1-licenses/quic-go-MIT.txt dist/LICENSE.quic-go.txt
+git diff --binary HEAD > dist/working-tree.patch
+git ls-files --cached --others --exclude-standard -z | sort -z | xargs -0 sha256sum > dist/source-SHA256SUMS
+(cd dist && sha256sum caddy-bbrv1 caddy-stock quicprobe build-info.txt working-tree.patch source-SHA256SUMS LICENSE.*.txt > SHA256SUMS)

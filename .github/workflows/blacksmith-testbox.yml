@@ -22,6 +22,10 @@ jobs:
         with:
           go-version: '1.26.3'
           cache: true
+      - name: Expose pinned Go to testbox SSH sessions
+        run: sudo ln -sf "$(command -v go)" /usr/local/bin/go
+      - name: Match live-machine UDP buffer limits
+        run: sudo sysctl -w net.core.rmem_max=26214400 net.core.wmem_max=26214400
       - name: Download and verify pinned dependencies
         run: go mod download && go mod verify
       - name: Run Testbox
